@@ -1,8 +1,10 @@
 package com.sweattypalms.skyblock.core.mobs.builder.dragons;
 
+import com.sweattypalms.skyblock.SkyBlock;
 import com.sweattypalms.skyblock.api.Point;
 import com.sweattypalms.skyblock.api.sequence.Sequence;
 import com.sweattypalms.skyblock.api.sequence.SequenceAction;
+import com.sweattypalms.skyblock.core.helpers.MozangStuff;
 import com.sweattypalms.skyblock.core.helpers.PDCHelper;
 import com.sweattypalms.skyblock.core.helpers.PlaceholderFormatter;
 import com.sweattypalms.skyblock.core.items.ItemManager;
@@ -10,6 +12,7 @@ import com.sweattypalms.skyblock.core.items.types.end.items.RemnantOfTheEye;
 import com.sweattypalms.skyblock.core.items.types.end.items.SummoningEye;
 import com.sweattypalms.skyblock.core.items.types.end.items.UsedSummoningEye;
 import com.sweattypalms.skyblock.core.mobs.builder.MobManager;
+import com.sweattypalms.skyblock.core.mobs.builder.NameAttributes;
 import com.sweattypalms.skyblock.core.mobs.builder.SkyblockMob;
 import com.sweattypalms.skyblock.core.mobs.regions.end.dragons.StrongDragon;
 import com.sweattypalms.skyblock.core.player.SkyblockPlayer;
@@ -17,10 +20,13 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.EndPortalFrame;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.TNTPrimed;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
@@ -51,10 +57,12 @@ public class DragonManager {
     private int summoningEyes = 0;
     private SkyblockMob dragon;
     private final Map<UUID, Double> playerDamage = new HashMap<>();
-    public double getPlayerDamage(UUID playerUUID){
+
+    public double getPlayerDamage(UUID playerUUID) {
         return this.playerDamage.getOrDefault(playerUUID, 0d);
     }
-    public void  addPlayerDamage(UUID playerUUID, double damage){
+
+    public void addPlayerDamage(UUID playerUUID, double damage) {
         double before = this.playerDamage.getOrDefault(playerUUID, 0.0);
         this.playerDamage.put(playerUUID, before + damage);
     }
@@ -113,31 +121,70 @@ public class DragonManager {
         player.getPlayer().getInventory().setItemInMainHand(summoningEye);
 
         if (summoningEyes == altarPoints.size()) {
-            altarBlocks.values().forEach(uuid -> {
-                int placedEyes = altarBlocks.values().stream().filter(_uuid -> _uuid.equals(uuid)).mapToInt(_uuid -> 1).sum();
+            altarBlocks.forEach((block, uuid) -> {
                 Player _player = Bukkit.getPlayer(uuid);
-                final int[] removed = {0};
-                int end = 45;
-                for (int slot = 0; slot < end; slot++) {
-                    if (removed[0] >= placedEyes) break;
-                    ItemStack itemStack = _player.getInventory().getItem(slot);
-                    if (itemStack == null) continue;
-                    String id = PDCHelper.getString(itemStack, "id");
-                    if (id == null) continue;
-                    if (id.equals(UsedSummoningEye.ID)) {
-                        ItemStack remnantOfTheEye = ItemManager.getItemStack(RemnantOfTheEye.ID);
-                        player.getPlayer().getInventory().setItem(slot, remnantOfTheEye);
-                        removed[0]++;
+                if (_player != null) {
+                    for (ItemStack item : _player.getInventory().getContents()) {
+                        if (item != null && PDCHelper.getString(item, "id") != null && PDCHelper.getString(item, "id").equals(UsedSummoningEye.ID)) {
+                            ItemStack remnantOfTheEye = ItemManager.getItemStack(RemnantOfTheEye.ID);
+                            _player.getInventory().remove(item);
+                            _player.getInventory().addItem(remnantOfTheEye);
+                            break; // Remove only one eye per player
+                        }
                     }
+                    _player.updateInventory();
                 }
-                assert _player != null;
-                _player.updateInventory();
-                _player.sendMessage("removed " + removed[0] + " eyes");
             });
 
-            summonDragon();
+            this.startEyeAnimation();
         }
     }
+
+    public void startEyeAnimation() { // Shows the eye animation that goes upwards
+        List<ArmorStand> eyes = new ArrayList<>();
+        if (this.altarBlocks.size() == 8) {
+            for (Block block : this.altarBlocks.keySet()) {
+                Location loc = block.getLocation();
+                loc = loc.clone();
+                if (loc.getWorld() == null) continue;
+                ArmorStand as = loc.getWorld().spawn(loc.clone().add(0.5, -1, 0.5), ArmorStand.class);
+                as.setVisible(false);
+                as.setMarker(true);
+                as.getEyeLocation().setPitch(90); // Looking up
+                as.setGravity(false);
+
+                EntityEquipment equipment = as.getEquipment();
+                assert equipment != null;
+                equipment.setHelmet(ItemManager.getItemStack(SummoningEye.ID));
+                eyes.add(as);
+                EndPortalFrame endPortalFrame = (EndPortalFrame) loc.getBlock().getBlockData();
+                endPortalFrame.setEye(false);
+            }
+            new BukkitRunnable() {
+
+                double y = 0;
+
+                @Override
+                public void run() {
+                    for (ArmorStand as : eyes) {
+                        as.teleport(as.getLocation().add(0, 0.05, 0));
+                    }
+
+                    if (y >= 4) {
+                        for (ArmorStand as : eyes) {
+                            as.remove();
+                        }
+                        this.cancel();
+                        // Now running the block animation and cancelling this task!
+                        DragonManager.this.summonDragon();
+                        return;
+                    }
+                    y += 0.05;
+                }
+            }.runTaskTimer(SkyBlock.getInstance(), 0L, 1L);
+        }
+    }
+
 
     public void removeSummoningEye(SkyblockPlayer player, Location location) {
         if (!altarBlocks.containsKey(location.getBlock())) return;
@@ -233,9 +280,9 @@ public class DragonManager {
 
         sequence.add(new SequenceAction(
                 () -> {
-                    String summonMessage = String.format("$5⇒ $l%s $5Dragon Spawned!", "Strong");
+                    String summonMessage = String.format("$5⇒ $5c$l%s $5Dragon Spawned!", "Strong");
                     summonMessage = PlaceholderFormatter.format(summonMessage);
-                    String finalSummonMessage = summonMessage;
+                    String finalSummonMessage = PlaceholderFormatter.format(summonMessage);
                     endWorld.getPlayers().forEach(player -> player.sendMessage(finalSummonMessage));
                     SkyblockMob dragon = MobManager.getInstance(StrongDragon.ID);
                     dragon.spawn(new Location(endWorld, 0, 85, 0));
@@ -268,7 +315,7 @@ public class DragonManager {
     }
 
     private boolean checkSolidBlock(Block block) {
-        BlockFace[] faces = { BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN };
+        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST, BlockFace.UP, BlockFace.DOWN};
 
         for (BlockFace face : faces) {
             if (block.getRelative(face).getType() == Material.AIR) {
@@ -280,6 +327,7 @@ public class DragonManager {
 
     public void onEnderDragonDeath() {
         this.summoningEyes = 0;
+        this.dragonDownMessage(this.dragon.getEntityInstance().getKiller());
         this.dragon.despawn();
         this.dragon = null;
         this.altarBlocks.keySet().forEach(block -> {
@@ -288,8 +336,73 @@ public class DragonManager {
             block.setBlockData(endPortalFrame);
         });
         this.altarBlocks.clear();
+        this.playerDamage.clear();
 
         temp_save_backup.forEach((loc, type) -> loc.getBlock().setType(type));
+    }
+
+    public void dragonDownMessage(Player killer) {
+        Map<UUID, Double> damage = MozangStuff.sortByValue(this.playerDamage);
+        List<UUID> damagers = new ArrayList<>(damage.keySet());
+
+        String green = PlaceholderFormatter.format("$a");
+        String yellow = PlaceholderFormatter.format("$e");
+        String gold = PlaceholderFormatter.format("$6");
+        String bold = PlaceholderFormatter.format("$l");
+        String gray = PlaceholderFormatter.format("$7");
+        String red = PlaceholderFormatter.format("$c");
+        String light_purple = PlaceholderFormatter.format("$d");
+
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            int playerRank = damagers.indexOf(p.getUniqueId()) + 1;
+            String yourDamage = getDamageString(damage, p.getUniqueId());
+            String rankColor = getRankColor(playerRank).toString();
+
+            p.sendMessage(green + "----------------------------------------------------");
+            p.sendMessage(gold + "                   " + bold + dragon.getNameAttribute(NameAttributes.CUSTOM_NAME).toString().toUpperCase() + " DOWN!");
+            p.sendMessage("");
+            p.sendMessage(green + "                " + killer.getName() + gray + " dealt the final blow.");
+            p.sendMessage("");
+
+            sendDamagerInfo(p, damagers, damage, 1, yellow);
+            sendDamagerInfo(p, damagers, damage, 2, gold);
+            sendDamagerInfo(p, damagers, damage, 3, red);
+
+            p.sendMessage("");
+            p.sendMessage(yellow + "          Your Damage: " + rankColor + yourDamage + rankColor + " (Position #" + playerRank + ")");
+            p.sendMessage(yellow + "               Runecrafting Experience: " + light_purple + "0" + red + " (WIP)");
+            p.sendMessage("");
+            p.sendMessage(green + "----------------------------------------------------");
+        }
+    }
+
+    private String getDamageString(Map<UUID, Double> damage, UUID playerId) {
+        try {
+            return PlaceholderFormatter.formatDecimalCSV(damage.get(playerId));
+        } catch (IllegalArgumentException ignored) {
+            return "0";
+        }
+    }
+
+    private ChatColor getRankColor(int rank) {
+        return switch (rank) {
+            case 1 -> ChatColor.GOLD;
+            case 2 -> ChatColor.YELLOW;
+            case 3 -> ChatColor.RED;
+            default -> ChatColor.GRAY;
+        };
+    }
+
+    private void sendDamagerInfo(Player p, List<UUID> damagers, Map<UUID, Double> damage, int rank, String color) {
+        String rankName = rank == 1 ? "1st" : (rank == 2 ? "2nd" : "3rd");
+        if (damagers.size() >= rank) {
+            UUID damagerId = damagers.get(rank - 1);
+            String damagerName = Bukkit.getOfflinePlayer(damagerId).getName();
+            String damageAmount = PlaceholderFormatter.formatDecimalCSV(damage.get(damagerId));
+            p.sendMessage(color + "          " + PlaceholderFormatter.format("$l") + rankName + " Damager" + PlaceholderFormatter.format("$7") + " - " + damagerName + PlaceholderFormatter.format("$7") + " - " + PlaceholderFormatter.format("$e") + damageAmount);
+        } else {
+            p.sendMessage(color + "          " + PlaceholderFormatter.format("$l") + rankName + " Damager" + PlaceholderFormatter.format("$7") + " - N/A");
+        }
     }
 
     private Location pointToLocation(Point point) {

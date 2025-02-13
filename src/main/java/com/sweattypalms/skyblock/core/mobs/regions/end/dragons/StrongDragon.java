@@ -29,12 +29,12 @@ public class StrongDragon extends EnderDragon implements ISkyblockMob {
 
     @Override
     public double getMaxDragonHealth() {
-        return 9_000_000;
+        return 9_000_000_000d;
     }
 
     @Override
     public double getDragonDamage() {
-        return 1_100;
+        return 11_000;
     }
 
     @Override

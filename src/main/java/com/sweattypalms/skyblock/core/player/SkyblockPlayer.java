@@ -5,6 +5,11 @@ import com.sweattypalms.skyblock.SkyBlock;
 import com.sweattypalms.skyblock.core.helpers.DamageCalculator;
 import com.sweattypalms.skyblock.core.helpers.PlaceholderFormatter;
 import com.sweattypalms.skyblock.core.player.sub.*;
+import com.sweattypalms.skyblock.core.player.sub.bonus.BonusManager;
+import com.sweattypalms.skyblock.core.player.sub.scoreboard.ScoreboardManager;
+import com.sweattypalms.skyblock.core.player.sub.skillz.SkillManager;
+import com.sweattypalms.skyblock.core.player.sub.stats.Stats;
+import com.sweattypalms.skyblock.core.player.sub.stats.StatsManager;
 import com.sweattypalms.skyblock.core.regions.RegionManager;
 import com.sweattypalms.skyblock.core.regions.Regions;
 import lombok.Getter;
@@ -19,26 +24,20 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
+@Getter
 public class SkyblockPlayer {
     private static final HashMap<UUID, SkyblockPlayer> players = new HashMap<>();
 
-    @Getter
     private final Random random = new Random();
-    @Getter
     private final StatsManager statsManager;
-    @Getter
     private final InventoryManager inventoryManager;
-    @Getter
     private final BonusManager bonusManager;
-    @Getter
+    private final CooldownManager cooldownManager;
     private final ActionBarManager actionBarManager;
-    @Getter
     private final ScoreboardManager scoreboardManager;
-    @Getter
     private final SlayerManager slayerManager;
-    @Getter
     private final SkillManager skillManager;
-    @Getter
+    private final CurrencyManager currencyManager;
     private final Player player;
     private BukkitTask tickRunnable;
 
@@ -56,9 +55,11 @@ public class SkyblockPlayer {
         this.statsManager = new StatsManager(this);
         this.inventoryManager = new InventoryManager(this);
         this.bonusManager = new BonusManager(this);
+        this.cooldownManager = new CooldownManager(this);
         this.actionBarManager = new ActionBarManager(this);
         this.slayerManager = new SlayerManager(this);
         this.skillManager = new SkillManager(this);
+        this.currencyManager = new CurrencyManager(this);
         // Should be last because it uses the other managers
         this.scoreboardManager = new ScoreboardManager(this);
 
@@ -104,6 +105,7 @@ public class SkyblockPlayer {
         if (this.tickCount % 20 != 0) return;
 
         this.bonusManager.cleanupExpiredBonuses();
+        this.inventoryManager.tick();
         this.statsManager.tick();
         this.actionBarManager.tick();
 
@@ -119,6 +121,14 @@ public class SkyblockPlayer {
     public void damage(double damage) {
         if (this.player.getGameMode() != GameMode.SURVIVAL)
             return;
+
+        StatsManager statsManager = this.getStatsManager();
+
+        double absorption = statsManager.getMaxStat(Stats.ABSORPTION);
+        statsManager.setMaxStat(Stats.ABSORPTION, Math.max(absorption - damage, 0));
+
+        damage = Math.max(damage - absorption, 0);
+
         this.player.setHealth(
                 Math.max(
                         this.player.getHealth() - damage,

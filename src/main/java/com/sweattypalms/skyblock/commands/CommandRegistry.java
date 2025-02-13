@@ -114,7 +114,13 @@ public class CommandRegistry {
         if (container == null) return false;
 
         Command cmdInfo = container.commandMethod.getAnnotation(Command.class);
-        if (cmdInfo.op() && !player.isOp()) {
+
+        // TODO: tf is this goofy ahh system no cap no kizzy
+
+        // Check if player has permission to use command
+        boolean hasPermission = player.hasPermission("skyblock.admin") || player.isOp();
+
+        if (cmdInfo.op() && !hasPermission) {
             player.sendMessage(ChatColor.RED + "You do not have permission to use this command.");
             return true;
         }
@@ -123,7 +129,7 @@ public class CommandRegistry {
         try {
             container.commandMethod.invoke(container.instance, player, args);
             return true;
-        } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException ignored) {
+        } catch (IllegalArgumentException | IllegalAccessException | InvocationTargetException e) {
             // If first failed, try to get a commandMethod with args of (Player player)
             try {
                 container.commandMethod.invoke(container.instance, player);

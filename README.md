@@ -1,28 +1,68 @@
 # Skyblock Remake
 
+![Skyblock Remake Banner](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/banner.png?raw=true)
+
+<p align="center">
+  <img src="https://img.shields.io/github/license/Sweattypalms/skyblock-remake" alt="License">
+  <img src="https://img.shields.io/github/languages/code-size/Sweattypalms/skyblock-remake" alt="Code Size">
+  <img src="https://img.shields.io/badge/language-Java-green" alt="Language">
+</p>
+<p align="center">
+  <a href="https://discord.gg/Ew4u4TRbQ6">
+    <img src="https://img.shields.io/discord/962270718568046592?color=7289DA&label=Join%20our%20Discord&logo=discord&logoColor=white" alt="Join our Discord&style=for-the-badge">
+  </a>
+</p>
+
+
 <b>Skyblock Remake </b> is an open-source fan project inspired by Hypixel's Skyblock. It aims not only to recreate the familiar experience but also to offer a platform for fellow developers to learn and grow.
 
 🚨 **Disclaimer:** This project is a fan-made recreation of "Hypixel" Skyblock. It is not affiliated with or endorsed by Hypixel or its associated products. All rights and content belong to their respective owners.
 
 ## Why This Project Exists
 
-I am a high school student deeply passionate about programming. Two years ago, I embarked on the journey of developing an early version of this plugin, which became instrumental in sharpening my programming skills. By open-sourcing this project, I aim to give back to the community. I believe that aspiring developers, just like I once was, can utilize this material as a valuable resource for learning and experimentation.
+I'm a high school kid, and I really enjoy programming, like you can make anything you want.
+I got a taste of that when I started developing this plugin two years ago. It was pretty basic back then, 
+but man, did it help me get good at programming, design patterns, efficient code, maths, everything. 
+I feel like it would've helped me a lot if there were projects that I could've taken inspiration from, 
+so I'm putting this out there so someone on the same path can benefit a lot from this. 
+This is my way of paying it back, y'know. Enjoy! 
 
 ## Features
 
-<details>
+<details open>
 <summary>Click to expand</summary>
 
 ### Player Features
 
 -   **Stats System:** Complete stat system.
+![Stats System](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/stats/stats_system.gif?raw=true)
 -   **Slayers (W.I.P):** Start quests and defeat bosses.
+*Start a Slayer Quest*
+![Slayer Quest](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/slayer/slayer_start.gif?raw=true)
+*Get the necessary xp to spawn the boss*
+![Slayer Quest](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/slayer/slayer_xp.gif?raw=true)
+*Defeat the boss*
+![Slayer Boss](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/slayer/slayer_kill.gif?raw=true)
 -   **Skills (W.I.P):** Progress and develop your player skills.
--   **Items System:** Dynamic system for in-game items.
+-   **Fan favourite items:** Most loved items from Hypixel Skyblock (e.g. Hyperion, Terminator, etc.)
+![Hyperion & Terminator melting mobs](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/items/items_showcase.gif?raw=true)
 -   **Regions:** Explore different areas and regions.
--   **Scoreboard (W.I.P):** See objectives, your balance and quests.
+-   **Scoreboard:** See objectives, your balance and quests.
+![Scoreboard](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/misc/scoreboard.png?raw=true)
 -   **Mobs System:** Engage with various in-game creatures.
+![Mobs System](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/mobs/mobs_showcase.png?raw=true)
+-   **Customize Items:** Customize your items by applying enchants, reforges, and much more!
+![Customize Items](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/items/customize_item_showcase.png?raw=true)
 -   **Ender Dragon Fight:** Battle the mighty Ender Dragon! Altar system with Custom Dragon Pathfinding + Dragon egg animation.
+![End World](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/end_world.png?raw=true)
+![Altar System](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/altar.gif?raw=true)
+![Spawn Animation](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/spawn_animation.gif?raw=true)
+![Dragon Pathfinding](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/dragon_pathfinding.gif?raw=true)
+![Dragon Ability](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/dragon_ability.gif?raw=true)
+![Fight Dragon)](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/fight_dragon.gif?raw=true)
+![Dragon Death](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/end/dragon_death_message.png?raw=true)
+- **Dungeons (W.I.P):** Procedurally generated dungeons with bosses and loot. (Extremely W.I.P)
+![Dungeons Generate Map](https://github.com/Sweattypalms/skyblock-remake/blob/master/README/assets/gameplay/dungeons/dungeon_generate_map.gif?raw=true)
 
 ### Developer Features
 <details>
@@ -46,8 +86,8 @@ public List<String> exampleTabCompleter(Player player, String[] args) {
 ```java
 Hologram hologram = new Hologram(  
 		"Example Text",  
-		new Location(Bukkit.getWorld("world"), 0, 100,0),  
-)				
+		new Location(Bukkit.getWorld("world"), 0, 100,0)  
+);	
 ```
 -   **Event-Based System:** Harness the power of events for versatile gameplay elements.
 ```java
@@ -100,7 +140,7 @@ public class LightningChestplate extends SkyblockItem implements IHasAbility, ID
 -   **UI System:** Robust UI system with callback features for clickable items and static GUIs.
 ```java
 public class TestGUI extends BaseGUI {
-	private static final int SIZE = 6 * 9 // 6 rows of 9 slots
+	private static final int SIZE = 6 * 9; // 6 rows of 9 slots
 
 	public TestGUI() {
 		super(SIZE, "Test GUI");

@@ -6,7 +6,7 @@ import com.sweattypalms.skyblock.core.items.builder.SkyblockItem;
 import com.sweattypalms.skyblock.core.items.builder.abilities.types.*;
 import com.sweattypalms.skyblock.core.items.builder.item.IShortBow;
 import com.sweattypalms.skyblock.core.player.SkyblockPlayer;
-import com.sweattypalms.skyblock.core.player.sub.Stats;
+import com.sweattypalms.skyblock.core.player.sub.stats.Stats;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -56,7 +56,7 @@ public class AbilityManager {
         @Override
         public void apply(Event event) {
             if (!(event instanceof SkyblockPlayerDamageEntityEvent skyblockPlayerDamageEntityEvent)) return;
-            /* Multiplicitive, Makes the weapon deal 2x damage */
+            /* Multiplicative, Makes the weapon deal 2x damage */
             skyblockPlayerDamageEntityEvent.addMultiplicativeMultiplierPercent(100);
         }
     };
@@ -97,6 +97,7 @@ public class AbilityManager {
             ));
         }
 
+
         @Override
         public void onTick(SkyblockPlayer player) {
             double currentMaxHealth = player.getStatsManager().getMaxStats().get(Stats.HEALTH);
@@ -104,7 +105,7 @@ public class AbilityManager {
         }
     }
 
-    public static abstract class TELEPORT_ABILITY implements ITriggerable, IUsageCost {
+    public static abstract class TELEPORT_ABILITY implements ITriggerableAbility, IUsageCost {
         private final int range;
 
         public TELEPORT_ABILITY(int range) {
@@ -116,6 +117,8 @@ public class AbilityManager {
             if (!(event instanceof SkyblockInteractEvent skyblockInteractEvent)) return;
             SkyblockPlayer skyblockPlayer = skyblockInteractEvent.getSkyblockPlayer();
             Player player = skyblockPlayer.getPlayer();
+
+            // check if player is looking down, if so, don't teleport.
 
             List<Material> whitelistedMaterials = List.of(
                     Material.AIR,
@@ -138,6 +141,12 @@ public class AbilityManager {
                 }
             }
 
+            start = start.getBlock().getLocation();
+            start = start.add(0.5, 0, 0.5);
+            start.setYaw(player.getLocation().getYaw());
+            start.setPitch(player.getLocation().getPitch());
+
+
             player.teleport(start);
         }
 
@@ -153,7 +162,7 @@ public class AbilityManager {
         }
     }
 
-    public static abstract class SHORT_BOW implements ITriggerable {
+    public static abstract class SHORT_BOW implements ITriggerableAbility {
         @Override
         public boolean nameVisible() {
             return false;
